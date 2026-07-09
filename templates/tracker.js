@@ -19,15 +19,30 @@
             localStorage.setItem('fc_session_id', sessionId);
         }
 
+        // Ambil lokasi pengunjung via ip-api.com (gratis, no-key)
+        fetch('https://ip-api.com/json/?fields=country,city', { method: 'GET' })
+            .then(res => res.json())
+            .then(geo => {
+                sendTrackingData(sessionId, geo.country || null, geo.city || null);
+            })
+            .catch(() => {
+                // Jika geolocation gagal, tetap kirim tanpa lokasi
+                sendTrackingData(sessionId, null, null);
+            });
+    }
+
+    function sendTrackingData(sessionId, country, city) {
         const data = {
             session_id: sessionId,
             page_url: window.location.href,
             device: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
             browser: getBrowserName(),
-            os: getOSName()
+            os: getOSName(),
+            country: country,
+            city: city
         };
 
-        // Send tracking data to the backend API
+        // Kirim tracking data ke API backend FutureCloud
         fetch(`${API_URL}/visitor/track`, {
             method: 'POST',
             headers: {
