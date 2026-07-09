@@ -1,58 +1,214 @@
 #!/usr/bin/env node
 
-const { program } = require('commander');
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+import inquirer from 'inquirer';
+import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Assuming the API will run on localhost during development
-const API_URL = 'http://localhost:8000/api/v1';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-program
-  .version('1.0.0')
-  .description('FutureCloud Monitoring Plugin Installer');
+async function initPlugin() {
+  console.log(chalk.cyan.bold('\n================================================'));
+  console.log(chalk.cyan.bold('    FUTURECLOUD MONITORING PLUGIN CLI INSTALLER  '));
+  console.log(chalk.cyan.bold('================================================\n'));
 
-program
-  .command('install')
-  .description('Install the monitoring tracker to your project')
-  .requiredOption('-k, --key <key>', 'Your FutureCloud License Key')
-  .action(async (options) => {
-    const licenseKey = options.key;
-
-    console.log('Verifying license key...');
-
-    try {
-      // In a real scenario, you would have a specific endpoint for verifying license, 
-      // but we can use the track endpoint just for checking if it returns 401/403
-      // Alternatively, we just assume the API has a /auth/verify endpoint. 
-      // For now, we will just proceed assuming it's valid for the MVP demonstration,
-      // but we can simulate an Axios call.
-      
-      console.log('License key verified successfully!');
-      
-      const templatePath = path.join(__dirname, 'templates', 'tracker.js');
-      const targetPath = path.join(process.cwd(), 'futurecloud-tracker.js');
-      
-      if (!fs.existsSync(templatePath)) {
-        console.error('Error: Template file not found.');
-        process.exit(1);
-      }
-      
-      let templateContent = fs.readFileSync(templatePath, 'utf8');
-      
-      // Inject the license key into the template
-      templateContent = templateContent.replace('__LICENSE_KEY__', licenseKey);
-      templateContent = templateContent.replace('__API_URL__', API_URL);
-      
-      fs.writeFileSync(targetPath, templateContent);
-      
-      console.log(`\nSuccess! The monitoring tracker has been installed.`);
-      console.log(`File created at: ${targetPath}`);
-      console.log(`\nTo use it, import or include 'futurecloud-tracker.js' in your application.`);
-      
-    } catch (error) {
-      console.error('Error during installation:', error.message);
+  // 1. Prompt Input License Key & Pilihan Framework
+  const questions = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'licenseKey',
+      message: 'Masukkan License Key FutureCloud Customer:',
+      validate: input => input.trim() ? true : 'License Key wajib diisi!'
+    },
+    {
+      type: 'list',
+      name: 'framework',
+      message: 'Framework apa yang Anda gunakan?',
+      choices: ['Laravel', 'React', 'Vue', 'HTML Biasa']
     }
-  });
+  ]);
 
-program.parse(process.argv);
+  const { framework, licenseKey } = questions;
+  const projectDir = process.cwd(); // Path root project customer tempat CLI dijalankan
+
+  // Detect Next.js or Vite configurations
+  let isNextJs = false;
+  let isVite = false;
+  
+  const packageJsonPath = path.join(projectDir, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const pkg = await fs.readJson(packageJsonPath);
+      const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+      if (allDeps.next) isNextJs = true;
+      if (allDeps.vite) isVite = true;
+    } catch (e) {
+      // Ignore JSON parse errors
+    }
+  }
+
+  // Determine correct environment variable name based on framework/builder
+  let envVarName = 'FUTURECLOUD_LICENSE_KEY';
+  if (isNextJs) {
+    envVarName = 'NEXT_PUBLIC_FUTURECLOUD_LICENSE_KEY';
+  } else if (isVite) {
+    envVarName = 'VITE_FUTURECLOUD_LICENSE_KEY';
+  }
+
+  // 2. Injeksi Kredensial ke .env / .env.local (Jika file .env ada di project customer)
+  console.log(chalk.yellow('\n[1/3] Menyelaraskan kredensial...'));
+  
+  const envFiles = ['.env', '.env.local', '.env.development'];
+  let envInjected = false;
+
+  for (const envFile of envFiles) {
+    const envPath = path.join(projectDir, envFile);
+    if (fs.existsSync(envPath)) {
+      let envContent = await fs.readFile(envPath, 'utf8');
+      if (!envContent.includes(envVarName)) {
+        // Ensure new line
+        const prefix = envContent.endsWith('\n') ? '' : '\n';
+        await fs.appendFile(envPath, `${prefix}${envVarName}="${licenseKey}"\n`);
+        console.log(chalk.green(`✔ License Key berhasil disuntikkan ke ${envFile} sebagai ${envVarName}`));
+        envInjected = true;
+      } else {
+        // Update existing key
+        const regex = new RegExp(`${envVarName}=.*`, 'g');
+        envContent = envContent.replace(regex, `${envVarName}="${licenseKey}"`);
+        await fs.writeFile(envPath, envContent, 'utf8');
+        console.log(chalk.blue(`✔ License Key diperbarui di ${envFile} untuk ${envVarName}`));
+        envInjected = true;
+      }
+    }
+  }
+
+  if (!envInjected) {
+    // If no .env file exists, create a default .env
+    const envPath = path.join(projectDir, '.env');
+    await fs.writeFile(envPath, `FUTURECLOUD_LICENSE_KEY="${licenseKey}"\nFUTURECLOUD_API_URL="http://localhost:8000/api/v1"\n`, 'utf8');
+    console.log(chalk.green(`✔ File .env baru berhasil dibuat dengan License Key`));
+  }
+
+  // 3. Membaca Core tracker.js & Transformasi ke Ekstensi UI Target
+  console.log(chalk.yellow('[2/3] Memproses ekstraksi file UI komponen...'));
+  const coreTrackerPath = path.join(__dirname, 'templates', 'tracker.js');
+
+  if (!fs.existsSync(coreTrackerPath)) {
+    console.error(chalk.red('❌ Error: File templates/tracker.js tidak ditemukan!'));
+    return;
+  }
+
+  let coreCode = await fs.readFile(coreTrackerPath, 'utf8');
+  
+  // Inject license key and API URL inside tracker.js placeholders
+  const processedTrackerCode = coreCode
+    .replace(/__LICENSE_KEY__/g, licenseKey)
+    .replace(/__API_URL__/g, 'http://localhost:8000/api/v1');
+
+  // Prepended config for global scope matching supervisor specifications
+  const injectedCode = `// FutureCloud Plugin Configuration\nconst FUTURECLOUD_KEY = "${licenseKey}";\n\n${processedTrackerCode}`;
+
+  let targetFolder = '';
+  let targetFileName = '';
+  let finalFileContent = '';
+
+  switch (framework) {
+    case 'Laravel':
+      targetFolder = path.join(projectDir, 'resources/views/vendor/futurecloud');
+      targetFileName = 'futurecloud-plugin.blade.php';
+      finalFileContent = `<script>\n${injectedCode}\n</script>`;
+      break;
+
+    case 'React':
+      targetFolder = path.join(projectDir, 'src/components/futurecloud');
+      targetFileName = 'FuturecloudPlugin.jsx';
+      finalFileContent = `import React, { useEffect } from 'react';\n\nexport default function FuturecloudPlugin() {\n  useEffect(() => {\n    ${injectedCode.replace(/\n/g, '\n    ')}\n  }, []);\n  return null;\n}`;
+      break;
+
+    case 'Vue':
+      targetFolder = path.join(projectDir, 'src/components/futurecloud');
+      targetFileName = 'FuturecloudPlugin.vue';
+      finalFileContent = `<template></template>\n<script>\nexport default {\n  name: 'FuturecloudPlugin',\n  mounted() {\n    ${injectedCode.replace(/\n/g, '\n    ')}\n  }\n}\n</script>`;
+      break;
+
+    case 'HTML Biasa':
+      targetFolder = path.join(projectDir, 'public/futurecloud');
+      targetFileName = 'futurecloud-plugin.html';
+      finalFileContent = `<script>\n${injectedCode}\n</script>`;
+      break;
+  }
+
+  // Tulis file ke direktori target project customer
+  await fs.ensureDir(targetFolder);
+  const destinationPath = path.join(targetFolder, targetFileName);
+  await fs.writeFile(destinationPath, finalFileContent, 'utf8');
+  console.log(chalk.green(`✔ Sukses mengekstrak komponen ke: ${destinationPath}`));
+
+  // 4. Auto-Routing untuk Laravel & Next.js
+  console.log(chalk.yellow('[3/3] Memeriksa konfigurasi routing otomatis...'));
+  
+  if (framework === 'Laravel') {
+    const webRoutePath = path.join(projectDir, 'routes/web.php');
+    if (fs.existsSync(webRoutePath)) {
+      let routeContent = await fs.readFile(webRoutePath, 'utf8');
+      if (!routeContent.includes('/futurecloud-monitoring')) {
+        const routeSnippet = `\n// Route otomatis dari FutureCloud CLI\nRoute::view('/futurecloud-monitoring', 'vendor.futurecloud.futurecloud-plugin');\n`;
+        await fs.appendFile(webRoutePath, routeSnippet);
+        console.log(chalk.green('✔ Endpoint /futurecloud-monitoring berhasil ditambahkan ke routes/web.php'));
+      } else {
+        console.log(chalk.blue('ℹ Endpoint /futurecloud-monitoring sudah ada di routes/web.php'));
+      }
+    } else {
+      console.log(chalk.gray('ℹ routes/web.php tidak ditemukan. Dilewati.'));
+    }
+  } else if (framework === 'React' && isNextJs) {
+    // Next.js routing automation (App Router vs Pages Router)
+    const appDir = path.join(projectDir, 'app');
+    const pagesDir = path.join(projectDir, 'pages');
+    
+    if (fs.existsSync(appDir)) {
+      const demoPageDir = path.join(appDir, 'futurecloud-demo');
+      await fs.ensureDir(demoPageDir);
+      const demoPagePath = path.join(demoPageDir, 'page.jsx');
+      const demoContent = `'use client';\n\nimport React from 'react';\nimport FuturecloudPlugin from '../../src/components/futurecloud/FuturecloudPlugin';\n\nexport default function FuturecloudDemoPage() {\n  return (\n    <div style={{\n      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif',\n      padding: '4rem 2rem',\n      maxWidth: '600px',\n      margin: '0 auto',\n      textAlign: 'center',\n      color: '#334155'\n    }}>\n      <h1 style={{ color: '#4f46e5', fontSize: '2.25rem', marginBottom: '1rem' }}>FutureCloud Demo Page</h1>\n      <p style={{ fontSize: '1.125rem', color: '#64748b', marginBottom: '2rem' }}>\n        Plugin monitoring, AI chatbot, dan Live Chat berhasil diintegrasikan pada rute ini.\n      </p>\n      <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>\n        Perhatikan sudut kanan bawah halaman untuk melihat floating widget.\n      </div>\n      <FuturecloudPlugin />\n    </div>\n  );\n}\n`;
+      await fs.writeFile(demoPagePath, demoContent, 'utf8');
+      console.log(chalk.green(`✔ Halaman demo Next.js App Router dibuat di: ${demoPagePath}`));
+      console.log(chalk.green(`✔ Rute baru tersedia di: /futurecloud-demo`));
+    } else if (fs.existsSync(pagesDir)) {
+      const demoPagePath = path.join(pagesDir, 'futurecloud-demo.jsx');
+      const demoContent = `import React from 'react';\nimport FuturecloudPlugin from '../src/components/futurecloud/FuturecloudPlugin';\n\nexport default function FuturecloudDemoPage() {\n  return (\n    <div style={{\n      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif',\n      padding: '4rem 2rem',\n      maxWidth: '600px',\n      margin: '0 auto',\n      textAlign: 'center',\n      color: '#334155'\n    }}>\n      <h1 style={{ color: '#4f46e5', fontSize: '2.25rem', marginBottom: '1rem' }}>FutureCloud Demo Page</h1>\n      <p style={{ fontSize: '1.125rem', color: '#64748b', marginBottom: '2rem' }}>\n        Plugin monitoring, AI chatbot, dan Live Chat berhasil diintegrasikan pada rute ini.\n      </p>\n      <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>\n        Perhatikan sudut kanan bawah halaman untuk melihat floating widget.\n      </div>\n      <FuturecloudPlugin />\n    </div>\n  );\n}\n`;
+      await fs.writeFile(demoPagePath, demoContent, 'utf8');
+      console.log(chalk.green(`✔ Halaman demo Next.js Pages Router dibuat di: ${demoPagePath}`));
+      console.log(chalk.green(`✔ Rute baru tersedia di: /futurecloud-demo`));
+    }
+  } else {
+    console.log(chalk.gray('ℹ Konfigurasi auto-routing dilewati untuk framework ini.'));
+  }
+
+  // 5. Cetak Output Panduan Integrasi Akhir
+  console.log(chalk.cyan.bold('\n================================================'));
+  console.log(chalk.green.bold('       PROSES INSTALASI PLUGIN SELESAI! 🎉      '));
+  console.log(chalk.cyan.bold('================================================\n'));
+  console.log(chalk.white('Gunakan panduan ini di template/layout website Anda:'));
+
+  if (framework === 'Laravel') {
+    console.log(chalk.magenta('-> Pasang di main layout Blade: @include(\'vendor.futurecloud.futurecloud-plugin\')'));
+    console.log(chalk.magenta('-> Kunjungi halaman monitoring demo di browser Anda: /futurecloud-monitoring'));
+  } else if (framework === 'React') {
+    console.log(chalk.magenta('-> Import di App.jsx: import FuturecloudPlugin from \'./components/futurecloud/FuturecloudPlugin\';'));
+    console.log(chalk.magenta('-> Render di layout: <FuturecloudPlugin />'));
+    if (isNextJs) {
+      console.log(chalk.magenta('-> Kunjungi rute demo di browser: /futurecloud-demo'));
+    }
+  } else if (framework === 'Vue') {
+    console.log(chalk.magenta('-> Import di App.vue: import FuturecloudPlugin from \'./components/futurecloud/FuturecloudPlugin.vue\';'));
+    console.log(chalk.magenta('-> Daftarkan dan render: <FuturecloudPlugin />'));
+  } else {
+    console.log(chalk.magenta('-> Salin file html tersebut atau panggil menggunakan tag script sebelum tag </body>'));
+  }
+  console.log('\n');
+}
+
+initPlugin().catch(err => console.error(chalk.red('Terjadi kesalahan fatal:'), err));
