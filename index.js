@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { program } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -10,23 +9,30 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Define program info using commander
-program
-  .name('futurecloud-monitoring')
-  .description('FutureCloud visitor monitoring, AI chatbot, and Live Support plugin installer CLI')
-  .version('1.0.0');
+// Helper function to print custom help guide
+function printUsageGuide() {
+  console.log(chalk.cyan.bold('\n================================================'));
+  console.log(chalk.cyan.bold('          FUTURECLOUD CLI USAGE GUIDE           '));
+  console.log(chalk.cyan.bold('================================================\n'));
+  console.log(chalk.white('Penggunaan perintah:'));
+  console.log(chalk.yellow('  fc -cb install            ') + chalk.gray('# Install plugin (muncul semua prompt)'));
+  console.log(chalk.yellow('  fc -cb install --key FC-XX') + chalk.gray('# Install dengan key langsung'));
+  console.log(chalk.yellow('  fc -cb -v                 ') + chalk.gray('# Tampilkan versi: 1.1.0'));
+  console.log(chalk.yellow('  fc -cb --help             ') + chalk.gray('# Tampilkan bantuan lengkap'));
+  console.log('\n');
+}
 
-// Register 'install' command
-program
-  .command('install')
-  .description('Install the monitoring tracker and interactive dashboard to your project')
-  .option('-k, --key <key>', 'Your FutureCloud License Key (bypasses prompt if provided)')
-  .action(async (options) => {
-    await runInstaller(options.key);
-  });
-
-// Parse CLI arguments
-program.parse(process.argv);
+function printHelpDetails() {
+  console.log(chalk.cyan.bold('\n================================================'));
+  console.log(chalk.cyan.bold('          FUTURECLOUD CLI HELPER MENU           '));
+  console.log(chalk.cyan.bold('================================================\n'));
+  console.log(chalk.white('Daftar perintah yang tersedia di bawah opsi -cb:\n'));
+  console.log(chalk.green('  install                   ') + chalk.white('Memulai wizard instalasi plugin ke project Anda.'));
+  console.log(chalk.green('  install --key <key>       ') + chalk.white('Instalasi cepat menggunakan License Key langsung.'));
+  console.log(chalk.green('  -v, --version             ') + chalk.white('Tampilkan versi rilis plugin (1.1.0).'));
+  console.log(chalk.green('  --help, -h                ') + chalk.white('Tampilkan bantuan menu ini.'));
+  console.log('\n');
+}
 
 async function runInstaller(passedKey) {
   console.log(chalk.cyan.bold('\n================================================'));
@@ -260,3 +266,56 @@ async function runInstaller(passedKey) {
   }
   console.log('\n');
 }
+
+async function main() {
+  const args = process.argv.slice(2);
+
+  // Case: fc (no arguments)
+  if (args.length === 0) {
+    printUsageGuide();
+    process.exit(0);
+  }
+
+  // Check if first arg is '-cb'
+  if (args[0] !== '-cb') {
+    console.error(chalk.red(`\n❌ Error: Opsi tidak dikenal: "${args[0]}"`));
+    printUsageGuide();
+    process.exit(1);
+  }
+
+  const subCommand = args[1];
+
+  // Case: fc -cb -v or fc -cb --version
+  if (subCommand === '-v' || subCommand === '--version' || subCommand === '-V') {
+    console.log('1.1.0');
+    process.exit(0);
+  }
+
+  // Case: fc -cb --help or fc -cb -h
+  if (subCommand === '--help' || subCommand === '-h') {
+    printHelpDetails();
+    process.exit(0);
+  }
+
+  // Case: fc -cb install
+  if (subCommand === 'install') {
+    // Check if key is passed via --key flag
+    let keyIndex = args.indexOf('--key');
+    if (keyIndex === -1) keyIndex = args.indexOf('-k');
+    
+    let key = null;
+    if (keyIndex !== -1 && args[keyIndex + 1]) {
+      key = args[keyIndex + 1];
+    }
+    
+    await runInstaller(key);
+    process.exit(0);
+  }
+
+  // Default unrecognized subcommand under -cb
+  console.error(chalk.red(`\n❌ Error: Subcommand tidak dikenal untuk opsi -cb: "${subCommand || ''}"`));
+  printUsageGuide();
+  process.exit(1);
+}
+
+main().catch(err => console.error(chalk.red('Terjadi kesalahan fatal:'), err));
