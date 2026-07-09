@@ -14,13 +14,19 @@ async function initPlugin() {
   console.log(chalk.cyan.bold('    FUTURECLOUD MONITORING PLUGIN CLI INSTALLER  '));
   console.log(chalk.cyan.bold('================================================\n'));
 
-  // 1. Prompt Input License Key & Pilihan Framework
+  // 1. Prompt Input License Key, API URL & Pilihan Framework
   const questions = await inquirer.prompt([
     {
       type: 'input',
       name: 'licenseKey',
       message: 'Masukkan License Key FutureCloud Customer:',
       validate: input => input.trim() ? true : 'License Key wajib diisi!'
+    },
+    {
+      type: 'input',
+      name: 'apiUrl',
+      message: 'Masukkan API URL FutureCloud:',
+      default: 'http://localhost:8000/api/v1'
     },
     {
       type: 'list',
@@ -30,7 +36,7 @@ async function initPlugin() {
     }
   ]);
 
-  const { framework, licenseKey } = questions;
+  const { framework, licenseKey, apiUrl } = questions;
   const projectDir = process.cwd(); // Path root project customer tempat CLI dijalankan
 
   // Detect Next.js or Vite configurations
@@ -49,15 +55,19 @@ async function initPlugin() {
     }
   }
 
-  // Determine correct environment variable name based on framework/builder
+  // Determine correct environment variable names based on framework/builder
   let envVarName = 'FUTURECLOUD_LICENSE_KEY';
+  let envApiVarName = 'FUTURECLOUD_API_URL';
+  
   if (isNextJs) {
     envVarName = 'NEXT_PUBLIC_FUTURECLOUD_LICENSE_KEY';
+    envApiVarName = 'NEXT_PUBLIC_FUTURECLOUD_API_URL';
   } else if (isVite) {
     envVarName = 'VITE_FUTURECLOUD_LICENSE_KEY';
+    envApiVarName = 'VITE_FUTURECLOUD_API_URL';
   }
 
-  // 2. Injeksi Kredensial ke .env / .env.local (Jika file .env ada di project customer)
+  // 2. Injeksi Kredensial (Key & API URL) ke .env / .env.local (Jika file .env ada di project customer)
   console.log(chalk.yellow('\n[1/3] Menyelaraskan kredensial...'));
   
   const envFiles = ['.env', '.env.local', '.env.development'];
@@ -67,28 +77,36 @@ async function initPlugin() {
     const envPath = path.join(projectDir, envFile);
     if (fs.existsSync(envPath)) {
       let envContent = await fs.readFile(envPath, 'utf8');
+      
+      // Manage License Key
       if (!envContent.includes(envVarName)) {
-        // Ensure new line
-        const prefix = envContent.endsWith('\n') ? '' : '\n';
-        await fs.appendFile(envPath, `${prefix}${envVarName}="${licenseKey}"\n`);
-        console.log(chalk.green(`✔ License Key berhasil disuntikkan ke ${envFile} sebagai ${envVarName}`));
-        envInjected = true;
+        const prefix = envContent.endsWith('\n') || envContent.trim() === '' ? '' : '\n';
+        envContent += `${prefix}${envVarName}="${licenseKey}"\n`;
       } else {
-        // Update existing key
         const regex = new RegExp(`${envVarName}=.*`, 'g');
         envContent = envContent.replace(regex, `${envVarName}="${licenseKey}"`);
-        await fs.writeFile(envPath, envContent, 'utf8');
-        console.log(chalk.blue(`✔ License Key diperbarui di ${envFile} untuk ${envVarName}`));
-        envInjected = true;
       }
+
+      // Manage API URL
+      if (!envContent.includes(envApiVarName)) {
+        const prefix = envContent.endsWith('\n') || envContent.trim() === '' ? '' : '\n';
+        envContent += `${prefix}${envApiVarName}="${apiUrl}"\n`;
+      } else {
+        const regex = new RegExp(`${envApiVarName}=.*`, 'g');
+        envContent = envContent.replace(regex, `${envApiVarName}="${apiUrl}"`);
+      }
+
+      await fs.writeFile(envPath, envContent, 'utf8');
+      console.log(chalk.green(`✔ Kredensial berhasil disuntikkan ke ${envFile}`));
+      envInjected = true;
     }
   }
 
   if (!envInjected) {
-    // If no .env file exists, create a default .env
+    // If no .env file exists, create a default .env with both credentials
     const envPath = path.join(projectDir, '.env');
-    await fs.writeFile(envPath, `FUTURECLOUD_LICENSE_KEY="${licenseKey}"\nFUTURECLOUD_API_URL="http://localhost:8000/api/v1"\n`, 'utf8');
-    console.log(chalk.green(`✔ File .env baru berhasil dibuat dengan License Key`));
+    await fs.writeFile(envPath, `${envVarName}="${licenseKey}"\n${envApiVarName}="${apiUrl}"\n`, 'utf8');
+    console.log(chalk.green(`✔ File .env baru berhasil dibuat dengan Kredensial`));
   }
 
   // 3. Membaca Core tracker.js & Transformasi ke Ekstensi UI Target
@@ -102,13 +120,13 @@ async function initPlugin() {
 
   let coreCode = await fs.readFile(coreTrackerPath, 'utf8');
   
-  // Inject license key and API URL inside tracker.js placeholders
+  // Inject license key and API URL inside tracker.js placeholders dynamically
   const processedTrackerCode = coreCode
     .replace(/__LICENSE_KEY__/g, licenseKey)
-    .replace(/__API_URL__/g, 'http://localhost:8000/api/v1');
+    .replace(/__API_URL__/g, apiUrl);
 
   // Prepended config for global scope matching supervisor specifications
-  const injectedCode = `// FutureCloud Plugin Configuration\nconst FUTURECLOUD_KEY = "${licenseKey}";\n\n${processedTrackerCode}`;
+  const injectedCode = `// FutureCloud Plugin Configuration\nconst FUTURECLOUD_KEY = "${licenseKey}";\nconst FUTURECLOUD_API = "${apiUrl}";\n\n${processedTrackerCode}`;
 
   let targetFolder = '';
   let targetFileName = '';
@@ -154,7 +172,9 @@ async function initPlugin() {
     if (fs.existsSync(webRoutePath)) {
       let routeContent = await fs.readFile(webRoutePath, 'utf8');
       if (!routeContent.includes('/futurecloud-monitoring')) {
-        const routeSnippet = `\n// Route otomatis dari FutureCloud CLI\nRoute::view('/futurecloud-monitoring', 'vendor.futurecloud.futurecloud-plugin');\n`;
+        // Safe check: make sure route file ends in a newline before appending
+        const prefix = routeContent.endsWith('\n') ? '' : '\n';
+        const routeSnippet = `${prefix}\n// Route otomatis dari FutureCloud CLI\nRoute::view('/futurecloud-monitoring', 'vendor.futurecloud.futurecloud-plugin');\n`;
         await fs.appendFile(webRoutePath, routeSnippet);
         console.log(chalk.green('✔ Endpoint /futurecloud-monitoring berhasil ditambahkan ke routes/web.php'));
       } else {
