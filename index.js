@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { program } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -9,19 +10,48 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function initPlugin() {
+// Define program info using commander
+program
+  .name('futurecloud-monitoring')
+  .description('FutureCloud visitor monitoring, AI chatbot, and Live Support plugin installer CLI')
+  .version('1.0.0');
+
+// Register 'install' command
+program
+  .command('install')
+  .description('Install the monitoring tracker and interactive dashboard to your project')
+  .option('-k, --key <key>', 'Your FutureCloud License Key (bypasses prompt if provided)')
+  .action(async (options) => {
+    await runInstaller(options.key);
+  });
+
+// Parse CLI arguments
+program.parse(process.argv);
+
+async function runInstaller(passedKey) {
   console.log(chalk.cyan.bold('\n================================================'));
   console.log(chalk.cyan.bold('    FUTURECLOUD MONITORING PLUGIN CLI INSTALLER  '));
   console.log(chalk.cyan.bold('================================================\n'));
 
-  // 1. Prompt Input License Key, API URL & Pilihan Framework
-  const questions = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'licenseKey',
-      message: 'Masukkan License Key FutureCloud Customer:',
-      validate: input => input.trim() ? true : 'License Key wajib diisi!'
-    },
+  let licenseKey = passedKey;
+
+  // 1. Resolve License Key: Prompt only if not provided in CLI options
+  if (!licenseKey) {
+    const keyPrompt = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'licenseKey',
+        message: 'Masukkan License Key FutureCloud Customer:',
+        validate: input => input.trim() ? true : 'License Key wajib diisi!'
+      }
+    ]);
+    licenseKey = keyPrompt.licenseKey;
+  } else {
+    console.log(chalk.green(`✔ Menggunakan License Key dari flag CLI: ${licenseKey}`));
+  }
+
+  // 2. Prompt Input API URL & Pilihan Framework
+  const remainingPrompts = await inquirer.prompt([
     {
       type: 'input',
       name: 'apiUrl',
@@ -36,7 +66,7 @@ async function initPlugin() {
     }
   ]);
 
-  const { framework, licenseKey, apiUrl } = questions;
+  const { framework, apiUrl } = remainingPrompts;
   const projectDir = process.cwd(); // Path root project customer tempat CLI dijalankan
 
   // Detect Next.js or Vite configurations
@@ -67,7 +97,7 @@ async function initPlugin() {
     envApiVarName = 'VITE_FUTURECLOUD_API_URL';
   }
 
-  // 2. Injeksi Kredensial (Key & API URL) ke .env / .env.local (Jika file .env ada di project customer)
+  // 3. Injeksi Kredensial (Key & API URL) ke .env / .env.local (Jika file .env ada di project customer)
   console.log(chalk.yellow('\n[1/3] Menyelaraskan kredensial...'));
   
   const envFiles = ['.env', '.env.local', '.env.development'];
@@ -109,7 +139,7 @@ async function initPlugin() {
     console.log(chalk.green(`✔ File .env baru berhasil dibuat dengan Kredensial`));
   }
 
-  // 3. Membaca Core tracker.js & Transformasi ke Ekstensi UI Target
+  // 4. Membaca Core tracker.js & Transformasi ke Ekstensi UI Target
   console.log(chalk.yellow('[2/3] Memproses ekstraksi file UI komponen...'));
   const coreTrackerPath = path.join(__dirname, 'templates', 'tracker.js');
 
@@ -164,7 +194,7 @@ async function initPlugin() {
   await fs.writeFile(destinationPath, finalFileContent, 'utf8');
   console.log(chalk.green(`✔ Sukses mengekstrak komponen ke: ${destinationPath}`));
 
-  // 4. Auto-Routing untuk Laravel & Next.js
+  // 5. Auto-Routing untuk Laravel & Next.js
   console.log(chalk.yellow('[3/3] Memeriksa konfigurasi routing otomatis...'));
   
   if (framework === 'Laravel') {
@@ -207,7 +237,7 @@ async function initPlugin() {
     console.log(chalk.gray('ℹ Konfigurasi auto-routing dilewati untuk framework ini.'));
   }
 
-  // 5. Cetak Output Panduan Integrasi Akhir
+  // 6. Cetak Output Panduan Integrasi Akhir
   console.log(chalk.cyan.bold('\n================================================'));
   console.log(chalk.green.bold('       PROSES INSTALASI PLUGIN SELESAI! 🎉      '));
   console.log(chalk.cyan.bold('================================================\n'));
@@ -230,5 +260,3 @@ async function initPlugin() {
   }
   console.log('\n');
 }
-
-initPlugin().catch(err => console.error(chalk.red('Terjadi kesalahan fatal:'), err));

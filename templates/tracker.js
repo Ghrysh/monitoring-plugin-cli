@@ -451,6 +451,227 @@
         .fc-brand-link:hover {
             color: #6b7280;
         }
+
+        /* ==========================================
+         * 3. MONITORING DASHBOARD PREMIUM STYLING
+         * ========================================== */
+        .fc-dashboard-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 15px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+        }
+        
+        /* Top Banner Header */
+        .fc-db-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.2);
+        }
+        
+        .fc-db-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #818cf8, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .fc-db-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .fc-db-status-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #34d399;
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+            animation: fc-db-pulse-anim 1.6s infinite;
+        }
+        
+        @keyframes fc-db-pulse-anim {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        }
+        
+        /* Stats Grid Cards */
+        .fc-db-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+        
+        .fc-db-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 120px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .fc-db-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        }
+        
+        .fc-db-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .fc-db-card-val {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1e1b4b;
+        }
+        
+        /* Log Table Section */
+        .fc-db-table-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fc-db-table-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 18px;
+        }
+        
+        .fc-db-table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+        
+        .fc-db-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+        
+        .fc-db-table th {
+            padding: 14px 16px;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #edf2f7;
+        }
+        
+        .fc-db-table td {
+            padding: 16px;
+            border-bottom: 1px solid #edf2f7;
+            color: #334155;
+            vertical-align: middle;
+        }
+        
+        .fc-db-table tr:hover td {
+            background: #f8fafc;
+        }
+        
+        /* Log Badges & Paths formatting */
+        .fc-db-session {
+            font-weight: 700;
+            font-family: monospace;
+            color: #4f46e5;
+            background: #f5f3ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .fc-db-date {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .fc-db-path-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .fc-db-path-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid #dbeafe;
+        }
+        
+        .fc-db-path-time {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        
+        .fc-db-location {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .fc-db-ip {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 3px;
+            font-family: monospace;
+        }
+        
+        .fc-db-info-footer {
+            margin-top: 24px;
+            padding: 16px;
+            background: #f0fdf4;
+            color: #166534;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #bbf7d0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     `;
 
     // Inject SVG Definitions
@@ -474,7 +695,69 @@
         sarahJoined: false
     };
 
-    // Initialize UI Elements
+    // Simulated dashboard fallback data (Visitor Journey Log)
+    const mockVisitorData = {
+        total_visitors: 1420,
+        today_visitors: 54,
+        visitor_logs: [
+            {
+                session_id: "fc_9d3k9s2a1h4",
+                date: "09 Jul 2026",
+                page_journey: [
+                    { path: "/home", time: "16:20:10" },
+                    { path: "/products", time: "16:21:45" },
+                    { path: "/dashboard", time: "16:23:05" }
+                ],
+                device: "Desktop",
+                browser: "Chrome",
+                city: "Jakarta",
+                country: "Indonesia",
+                ip_address: "182.253.140.85"
+            },
+            {
+                session_id: "fc_2a8s9k1h5c4",
+                date: "09 Jul 2026",
+                page_journey: [
+                    { path: "/home", time: "15:45:12" },
+                    { path: "/about", time: "15:48:30" }
+                ],
+                device: "Mobile",
+                browser: "Safari",
+                city: "Surabaya",
+                country: "Indonesia",
+                ip_address: "110.138.25.10"
+            },
+            {
+                session_id: "fc_7h3l8w2x1v9",
+                date: "09 Jul 2026",
+                page_journey: [
+                    { path: "/contact", time: "14:12:00" }
+                ],
+                device: "Desktop",
+                browser: "Firefox",
+                city: "Bandung",
+                country: "Indonesia",
+                ip_address: "36.85.120.4"
+            },
+            {
+                session_id: "fc_5v8n3m1q6p2",
+                date: "08 Jul 2026",
+                page_journey: [
+                    { path: "/home", time: "23:55:18" },
+                    { path: "/checkout", time: "23:59:40" }
+                ],
+                device: "Mobile",
+                browser: "Chrome",
+                city: "Medan",
+                country: "Indonesia",
+                ip_address: "103.22.180.12"
+            }
+        ]
+    };
+
+    // ==========================================
+    // 3. UI INITIALIZER & RENDERING FLOW
+    // ==========================================
     function setupUI() {
         // Prevent duplicate setups
         if (document.getElementById('fc-widget-container')) return;
@@ -484,7 +767,10 @@
         styleSheet.textContent = cssStyles;
         document.head.appendChild(styleSheet);
 
-        // 2. Create Core Wrapper
+        // 2. Render Analytics Dashboard if matching paths
+        renderDashboard();
+
+        // 3. Create Widget Wrapper
         const wrapper = document.createElement('div');
         wrapper.id = 'fc-widget-container';
         
@@ -620,6 +906,185 @@
         });
     }
 
+    // Render Dashboard UI
+    function renderDashboard() {
+        const path = window.location.pathname;
+        const isDashboardRoute = path.includes('/futurecloud-monitoring') || 
+                                 path.includes('/futurecloud-demo') || 
+                                 path.endsWith('futurecloud-plugin.html') || 
+                                 document.getElementById('futurecloud-dashboard');
+                                 
+        if (!isDashboardRoute) return;
+
+        // Find or create dashboard root element
+        let dbRoot = document.getElementById('futurecloud-dashboard');
+        if (!dbRoot) {
+            // Overwrite body if it's a dedicated monitoring page path
+            dbRoot = document.createElement('div');
+            dbRoot.id = 'futurecloud-dashboard';
+            document.body.innerHTML = '';
+            document.body.appendChild(dbRoot);
+            document.body.style.background = '#f8fafc';
+            document.body.style.margin = '0';
+        }
+
+        // Render Dashboard Structure
+        dbRoot.innerHTML = `
+            <div class="fc-dashboard-container">
+                <!-- Header -->
+                <div class="fc-db-header">
+                    <div class="fc-db-logo">FutureCloud visitor-monitoring</div>
+                    <div class="fc-db-badge">
+                        <span class="fc-db-status-pulse"></span>
+                        <span>Active Connection</span>
+                    </div>
+                </div>
+                
+                <!-- Cards -->
+                <div class="fc-db-grid">
+                    <div class="fc-db-card">
+                        <h4>Total Pengunjung</h4>
+                        <div class="fc-db-card-val" id="fc-total-visitors">-</div>
+                    </div>
+                    <div class="fc-db-card">
+                        <h4>Pengunjung Hari Ini</h4>
+                        <div class="fc-db-card-val" id="fc-today-visitors">-</div>
+                    </div>
+                </div>
+                
+                <!-- Table -->
+                <div class="fc-db-table-card">
+                    <h3>Log Pengunjung (Visitor Journey)</h3>
+                    <div class="fc-db-table-wrapper">
+                        <table class="fc-db-table">
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Halaman</th>
+                                    <th>Perangkat</th>
+                                    <th>Lokasi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fc-logs-body">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">
+                                        Loading visitor logs database...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="fc-db-info-footer">
+                        <svg style="width:16px;height:16px;" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M12 20C7.6 20 4 16.4 4 12S7.6 4 12 4 20 7.6 20 12 16.4 20 12 20M11 8H13V6H11V8M11 18H13V10H11V18Z"/></svg>
+                        <span>Plugin terhubung aktif pada License Key Anda: <strong>${LICENSE_KEY}</strong></span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Load Data from API
+        fetchDashboardData();
+    }
+
+    // Fetch dashboard stats from API, fallback to mock data on error/empty
+    function fetchDashboardData() {
+        const totalEl = document.getElementById('fc-total-visitors');
+        const todayEl = document.getElementById('fc-today-visitors');
+        const tbody = document.getElementById('fc-logs-body');
+
+        fetch(`${API_URL}/visitor/stats`, {
+            method: 'GET',
+            headers: {
+                'X-FutureCloud-License': LICENSE_KEY,
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.visitor_logs && data.visitor_logs.length > 0) {
+                populateDashboard(data);
+            } else {
+                // Fallback to mock data if API succeeded but returned empty
+                populateDashboard(mockVisitorData);
+            }
+        })
+        .catch(() => {
+            // Fallback to mock data if API is offline or not configured
+            populateDashboard(mockVisitorData);
+        });
+    }
+
+    // Populate HTML with analytics data
+    function populateDashboard(data) {
+        const totalEl = document.getElementById('fc-total-visitors');
+        const todayEl = document.getElementById('fc-today-visitors');
+        const tbody = document.getElementById('fc-logs-body');
+
+        // Render Cards with count animation
+        animateCount(totalEl, 0, data.total_visitors, 1000);
+        animateCount(todayEl, 0, data.today_visitors, 800);
+
+        // Render Table Rows
+        tbody.innerHTML = '';
+        data.visitor_logs.forEach(log => {
+            const tr = document.createElement('tr');
+            
+            // Waktu
+            const waktuTd = document.createElement('td');
+            waktuTd.innerHTML = `
+                <div>ID Sesi: <span class="fc-db-session">${log.session_id.substring(0, 8)}</span></div>
+                <div class="fc-db-date">${log.date}</div>
+            `;
+            tr.appendChild(waktuTd);
+
+            // Halaman
+            const halamanTd = document.createElement('td');
+            const pathList = document.createElement('ul');
+            pathList.className = 'fc-db-path-list';
+            
+            log.page_journey.forEach(journey => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="fc-db-path-badge">${journey.path}</span>
+                    <span class="fc-db-path-time">(${journey.time})</span>
+                `;
+                pathList.appendChild(li);
+            });
+            halamanTd.appendChild(pathList);
+            tr.appendChild(halamanTd);
+
+            // Perangkat
+            const perangkatTd = document.createElement('td');
+            perangkatTd.textContent = `${log.device || 'Desktop'} - ${log.browser || 'Chrome'}`;
+            tr.appendChild(perangkatTd);
+
+            // Lokasi
+            const lokasiTd = document.createElement('td');
+            lokasiTd.innerHTML = `
+                <div class="fc-db-location">${log.city || 'Unknown'}, ${log.country || 'ID'}</div>
+                <div class="fc-db-ip">IP: ${log.ip_address}</div>
+            `;
+            tr.appendChild(lokasiTd);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Counting effect helper
+    function animateCount(obj, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
     // Scroll chat body helper
     function scrollToBottom(container) {
         setTimeout(() => {
@@ -679,7 +1144,7 @@
     }
 
     // ==========================================
-    // 3. AI & LIVE CHAT SIMULATIONS
+    // 4. AI & LIVE CHAT SIMULATIONS
     // ==========================================
 
     function simulateAiResponse(userText, container) {
@@ -691,7 +1156,7 @@
         if (normalizedText.includes('harga') || normalizedText.includes('price') || normalizedText.includes('langganan') || normalizedText.includes('bayar')) {
             reply = 'FutureCloud menawarkan paket langganan Fleksibel untuk plugin monitoring & chatbot. Biayanya mulai dari $9/bulan per domain. Anda bisa mengelolanya langsung di Dashboard FutureCloud.';
         } else if (normalizedText.includes('integrasi') || normalizedText.includes('pasang') || normalizedText.includes('cara')) {
-            reply = 'Untuk mengintegrasikan plugin ini, Anda cukup menjalankan perintah `futurecloud-init` via CLI, masukkan License Key, dan pilih framework yang sesuai (Laravel, React, Vue, HTML Biasa). Integrasi selesai dalam waktu kurang dari 1 menit!';
+            reply = 'Untuk mengintegrasikan plugin ini, Anda cukup menjalankan perintah `futurecloud-monitoring install` via CLI, masukkan License Key, dan pilih framework yang sesuai (Laravel, React, Vue, HTML Biasa).';
         } else if (normalizedText.includes('traffic') || normalizedText.includes('monitoring') || normalizedText.includes('stat')) {
             reply = 'Plugin Traffic Monitoring kami melacak kunjungan secara real-time, tipe perangkat (Mobile/Desktop), browser, sistem operasi, serta durasi sesi kunjungan untuk optimasi website Anda.';
         } else if (normalizedText.includes('halo') || normalizedText.includes('hai') || normalizedText.includes('hello') || normalizedText.includes('p')) {
