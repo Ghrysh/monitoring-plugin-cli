@@ -1,10 +1,10 @@
 {
-  "name": "monitoring-plugin-cli",
-  "version": "1.0.0",
-  "type": "module",
+  "name": "futurecloud-monitoring-cli",
+  "version": "1.0.4",
   "main": "index.js",
   "bin": {
-    "fc": "./index.js"
+    "futurecloud-monitoring": "./index.js",
+    "fc-m": "./index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
