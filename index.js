@@ -125,6 +125,13 @@ program
       // ══ LANGKAH 4: Auto-Routing & Panduan ════════════════════
       await runRouteAdvisor(frameworkMeta, deployedPath, licenseKey);
 
+      // ══ LANGKAH 5: Tandai sebagai terinstal ══════════════════
+      try {
+        await axios.post(`${API_URL}/v1/install`, { license_key: licenseKey });
+      } catch (err) {
+        // Abaikan jika gagal
+      }
+
       // ══ Summary ═══════════════════════════════════════════════
       console.log(chalk.bold.green('\n╔═══════════════════════════════════════╗'));
       console.log(chalk.bold.green('║         [SUCCESS]  Instalasi Selesai!           ║'));
