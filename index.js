@@ -55,21 +55,7 @@ program
     console.log(chalk.bold.cyan('╚═══════════════════════════════════════╝\n'));
 
     try {
-      // ══ Auto-Update Check ═════════════════════════════════════
-      try {
-        const { execSync } = require('child_process');
-        const pkgName = require('./package.json').name;
-        const currentVer = require('./package.json').version;
-        const latestVer = execSync(`npm show ${pkgName} version`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-        if (latestVer && latestVer !== currentVer) {
-          console.log(chalk.yellow(`\n[UPDATE] Versi baru ditemukan (${latestVer}). Sedang memperbarui secara otomatis...`));
-          execSync(`npm install -g ${pkgName}@latest`, { stdio: 'ignore' });
-          console.log(chalk.green(`[SUCCESS] Pembaruan berhasil! Silakan jalankan ulang perintah instalasi Anda.\n`));
-          process.exit(0);
-        }
-      } catch (err) {
-        // Abaikan jika offline atau permission denied
-      }
+      
 
       // ══ LANGKAH 1: License Key ═══════════════════════════════
       // Gunakan modul baru: prompt interaktif jika --key tidak diberikan.
