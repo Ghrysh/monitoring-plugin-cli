@@ -142,7 +142,7 @@ program
 
       // ══ LANGKAH 5: Tandai sebagai terinstal ══════════════════
       try {
-        await axios.post(`${API_URL}/v1/install`, { license_key: licenseKey });
+        await axios.post(`${API_URL}/install`, { license_key: licenseKey });
       } catch (err) {
         // Abaikan jika gagal
       }
