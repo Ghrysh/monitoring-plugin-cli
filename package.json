@@ -4,7 +4,8 @@
   "main": "index.js",
   "bin": {
     "futurecloud-monitoring": "./index.js",
-    "fc-m": "./index.js"
+    "fc-m": "./index.js",
+    "futurecloud-monitoring-cli": "./index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

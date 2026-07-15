@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const axios = require('axios');
 
 /**
  * FutureCloud Monitoring Plugin CLI
