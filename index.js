@@ -38,7 +38,7 @@ const { runRouteAdvisor }                     = require('./lib/routeAdvisor');
 
 program
   .name('fc-m | futurecloud-monitoring')
-  .version('1.1.0')
+  .version(require('./package.json').version)
   .description('FutureCloud Monitoring Plugin Installer');
 
 // ─── Command: install ─────────────────────────────────────────
